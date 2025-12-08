@@ -1,0 +1,577 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Management",
+    "description": "SAP Event Mesh default plan allows to create, delete, update, query queues and queue subscriptions on topics. Using queue subscriptions the published messages on topics can be delivered to queues. The queue management allows reliable and asynchronous message delivery.",
+    "version": "1.0.0"
+  },
+  "x-sap-shortText": "Manage and configure queues and queue subscriptions.",
+  "servers": [
+    {
+      "url": "https://{subdomain}.cfapps.{region}.hana.ondemand.com/hub/rest/api/v1/management/messaging",
+      "variables":
+        {
+          "subdomain" : {"default": "enterprise-messaging-hub-backend"},
+          "region": {"default": "eu10", "enum": ["eu10","us10","br10","jp10","ap10","ap11","cn40","eu20","us20","jp20","ca10","ap21","us21","eu11","eu12","ap12","us30"]}
+        }
+    }
+  ],
+  "tags": [
+    {
+      "name": "Manage Queues",
+      "description": "Create, Delete, Update, Read Queues"
+    },
+    {
+      "name": "Queue Subscriptions to Topics",
+      "description": "Create, Delete, Update, Read queue subscriptions to topics"
+    }
+  ],
+  "security": [
+    {
+      "oAuth2": []
+    }
+  ],
+  "paths": {
+    "/queues": {
+      "get": {
+        "tags": [
+          "Manage Queues"
+        ],
+        "summary": "Get Queues",
+        "description": "Get settings and information for all queues",
+        "operationId": "getQueues",
+        "responses": {
+          "200": {
+            "description": "Ok: Successfully retrieved list of queues",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Queue"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised: if the authorisation failed"
+          },
+          "403": {
+            "description": "Forbidden: if the provided authentication credentials were insufficient"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/queues/{queue}": {
+      "get": {
+        "tags": [
+          "Manage Queues"
+        ],
+        "summary": "Get Queue",
+        "description": "Get settings and information for a queue",
+        "operationId": "getQueue",
+        "parameters": [
+          {
+            "name": "queue",
+            "in": "path",
+            "description": "Name of the queue (must be URL encoded). For allowed characters & pattern to be followed for queue name please refer the pattern in schema QueueName.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok: successfully retrieved the queue",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Queue"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request: if the given parameters have invalid values"
+          },
+          "401": {
+            "description": "Unauthorised: if the authorisation failed"
+          },
+          "403": {
+            "description": "Forbidden: if the provided authentication credentials were insufficient"
+          },
+          "404": {
+            "description": "Not Found: if the queue was not found"
+          }
+        },
+        "deprecated": false
+      },
+      "put": {
+        "tags": [
+          "Manage Queues"
+        ],
+        "summary": "Create / Update Queue",
+        "description": "Creates or updates a queue by the parameters specified in the request body. When this API is called on an existing queue only parameters request body are updated. The queue name (path segment/parameter) must be URL encoded.",
+        "operationId": "putQueue",
+        "parameters": [
+          {
+            "name": "queue",
+            "in": "path",
+            "description": "Name of the queue (must be URL encoded). For allowed characters & pattern to be followed for queue name please refer the pattern in schema QueueName.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "queueConfig",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QueueP"
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "description": "Ok: if the queue was successfully updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Queue"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created: if the queue was successfully created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Queue"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request: if the given parameters have invalid values"
+          },
+          "401": {
+            "description": "Unauthorised: if the authorisation failed"
+          },
+          "403": {
+            "description": "Forbidden: if the provided authentication credentials were insufficient"
+          },
+          "501": {
+            "description": "Not Implemented: if a queue update is requested but the corresponding plan (lite,dev) doesn't support it"
+          }
+        },
+        "deprecated": false
+      },
+      "delete": {
+        "tags": [
+          "Manage Queues"
+        ],
+        "summary": "Delete Queue",
+        "description": "Deletes a queue by the name given in the parameters. The queue name (path segment/parameter) must be URL encoded.",
+        "operationId": "deleteQueue",
+        "parameters": [
+          {
+            "name": "queue",
+            "in": "path",
+            "description": "Name of the queue (must be URL encoded). For allowed characters & pattern to be followed for queue name please refer the pattern in schema QueueName.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content: if the queue was successfully deleted"
+          },
+          "400": {
+            "description": "Bad Request: if the given parameters have invalid values"
+          },
+          "401": {
+            "description": "Unauthorised: if the authorisation failed"
+          },
+          "403": {
+            "description": "Forbidden: if the provided authentication credentials were insufficient"
+          },
+          "404": {
+            "description": "Not Found: if the queue was not found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/queues/{queue}/subscriptions": {
+      "get": {
+        "tags": [
+          "Queue Subscriptions to Topics"
+        ],
+        "summary": "Get Queue Subscriptions",
+        "description": "Get list of queue subscriptions of a given queue name. The queue name (path segment/parameter) must be URL encoded.",
+        "operationId": "getQueueSubscriptions",
+        "parameters": [
+          {
+            "name": "queue",
+            "in": "path",
+            "description": "Name of the queue (must be URL encoded). For allowed characters & pattern to be followed for queue name please refer the pattern in schema QueueName.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Response with list of queue subscriptions.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QueueSubscription"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request: if the given parameters have invalid values"
+          },
+          "401": {
+            "description": "Unauthorised: if the authorisation failed"
+          },
+          "403": {
+            "description": "Forbidden: if the provided authentication credentials were insufficient"
+          },
+          "404": {
+            "description": "Not Found:  if the queue was not found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/queues/{queue}/subscriptions/{topic}": {
+      "put": {
+        "tags": [
+          "Queue Subscriptions to Topics"
+        ],
+        "summary": "Create / Update Queue Subscriptions",
+        "description": "Creates or updates a queue subscription. The queue name and topic pattern (path segment/parameter) must be URL encoded. ",
+        "operationId": "putQueueSubscription_1",
+        "parameters": [
+          {
+            "name": "queue",
+            "in": "path",
+            "description": "Name of the queue (must be URL encoded). For allowed characters & pattern to be followed for queue name please refer the pattern in schema QueueName.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "topic",
+            "in": "path",
+            "description": "Topic (Subscription) (must be URL encoded). For allowed characters & pattern to be followed for queue name please refer the pattern in schema TopicName.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok: if the queue subscription was successfully updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueueSubscription"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created: if the queue subscription was successfully created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueueSubscription"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request: if the given parameters have invalid values"
+          },
+          "401": {
+            "description": "Unauthorised: if the authorisation failed"
+          },
+          "403": {
+            "description": "Forbidden: if the provided authentication credentials were insufficient"
+          },
+          "404": {
+            "description": "Not Found: if the queue was not found"
+          }
+        },
+        "deprecated": false
+      },
+      "delete": {
+        "tags": [
+          "Queue Subscriptions to Topics"
+        ],
+        "summary": "Delete Queue Subscription",
+        "description": "Deletes given queue subscription. The queue name and topic pattern (path segment/parameter) must be URL encoded. ",
+        "operationId": "putQueueSubscription",
+        "parameters": [
+          {
+            "name": "queue",
+            "in": "path",
+            "description": "Name of the queue (must be URL encoded). For allowed characters & pattern to be followed for queue name please refer the pattern in schema QueueName.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "topic",
+            "in": "path",
+            "description": "Topic (Subscription) (must be URL encoded). For allowed characters & pattern to be followed for queue name please refer the pattern in schema TopicName.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content: if the queue subscription was successfully deleted"
+          },
+          "400": {
+            "description": "Bad Request: if the given parameters have invalid values"
+          },
+          "401": {
+            "description": "Unauthorised: if the authorisation failed"
+          },
+          "403": {
+            "description": "Forbidden: if the provided authentication credentials were insufficient"
+          },
+          "404": {
+            "description": "Not Found: if the queue or queue susbription was not found"
+          }
+        },
+        "deprecated": false
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "oAuth2": {
+        "type": "oauth2",
+        "description": "This API uses OAuth 2 with client credentials flow",
+        "flows": {
+          "clientCredentials": {
+            "tokenUrl": "https://{subdomain(identity_zone)}.authentication.{host}/oauth/token",
+            "scopes": {}
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Queue": {
+        "title": "Queue",
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "accessType": {
+            "type": "string",
+            "description": "A queue has an access type, which determines how messages are delivered when multiple consumer flows are bound to it. Queues can be assigned one of the following access types\nEXCLUSIVE: Only one consumer can receive a message at any one time, while additional consumers may be connected as standby. That is, only one flow can be active. Only the first consumer to bind can receive messages. If the first consumer disconnects, the second consumer receives data, and so on. An exclusive queue always delivers messages in the order they are received.\nNON_EXCLUSIVE: Multiple consumers can bind to a non-exclusive queue. Each consumer is serviced in round-robin fashion. This provides load-balancing; however, if a connection fails, then unacknowledged messages are delivered to another consumer with the re-delivered flag set. In this way, messages can be delivered to consumers out of order.\nThe access type can be changed for a durable queue, but only when client access to the queue has been disabled.\nThe default value is: NON_EXCLUSIVE.\n\nSupported plans: default, dedicated.",
+            "example": "EXCLUSIVE",
+            "enum": [
+              "EXCLUSIVE",
+              "NON_EXCLUSIVE"
+            ]
+          },
+          "maxDeliveredUnackedMsgsPerFlow": {
+            "type": "integer",
+            "description": "Maximum number of unacknowledged messages allowed in the queue. The default value is: 10000.\n\nSupported plans: default, dedicated.",
+            "format": "int64"
+          },
+          "maxMessageSizeInBytes": {
+            "type": "integer",
+            "description": "Maximum message size allowed in the queue (in bytes). The default value is: 10000000.\n\nSupported plans: default, dedicated.",
+            "format": "int64"
+          },
+          "maxQueueMessageCount": {
+            "type": "integer",
+            "description": "Maximum allowed messages in the queue.",
+            "format": "int64"
+          },
+          "maxQueueSizeInBytes": {
+            "type": "integer",
+            "description": "Maximum allowed queue size (in bytes).\nThe default value is: 1572864000 in (binary) which equates to  1500 megabytes.\nThe value will always be rounded(ceiling) to a multiple of 1048576.\n1048576 equates to 1 megabyte.",
+            "format": "int64"
+          },
+          "messageCount": {
+            "type": "integer",
+            "description": "Current number of messages residing in the queue.\n \nSupported plans: default, dedicated.",
+            "format": "int64"
+          },
+          "queueSizeInBytes": {
+            "type": "integer",
+            "description": "Total size of messages in the queue (in bytes).\n \nSupported plans: default, dedicated.",
+            "format": "int64"
+          },
+          "respectTtl": {
+            "type": "boolean",
+            "description": "Enable or disable the respecting of the \"time to live\" (TTL). If enabled, then messages contained in the queue are checked for expiry. If expired, the message is removed from the queue and discarded. The default value is `false`\n\nSupported plans: default, dedicated."
+          },
+          "maxRedeliveryCount": {
+            "type": "integer",
+            "description": "This property is applicable only when AMQP 1.0 is used. When messages are consumed with AMQP 1.0 protocol, client can reject a message delivered from queue. In such case the message is redelivered to the client. This property determines maximum number of times the queue attempts redelivery of a message. After maximum redelivery count is reached, the message is moved to the queue that is set as dead message queue for this queue. If dead message queue is not specified, the message is discarded after maximum redelivery count is reached. See property deadMsgQueue for how to specify dead message queue.",
+            "format": "int64",
+            "minimum": 0,
+            "maximum": 255,
+            "default": 0
+          },
+          "maxTtl": {
+            "type": "integer",
+            "description": "Maximum time in seconds a message can stay in the queue when respectTtl option enabled for queue. A message expires when the lesser of the sender assigned time-to-live (TTL) in the message and the maxTtl configured for the queue is exceeded. The expired message  is moved the queue that is set as dead message queue for this queue. If dead message queue is not specified, the message is discarded after expiry. See property deadMsgQueue for how to specify dead message queue. A value of 0 for this property disables expiry.",
+            "format": "int64",
+            "default": 0
+          },
+          "deadMsgQueue": {
+            "type": "string",
+            "description": "A queue can be created or updated with dead message queue using this property.  Value of deadMsgQueue is name of another queue. Expired messages or messages that reach maximum redelivery count are moved to dead message queue. See properties maxRedeliveryCount and maxTtl for details."
+          },
+          "egressDisabled": {
+            "type": "boolean",
+            "description": "Enable or disable the transmission of messages from the Queue. The default value is false."
+          },
+          "ingressDisabled": {
+            "type": "boolean",
+            "description": "Enable or disable the reception of messages to the Queue. The default value is false."
+          },
+          "unacknowledgedMessageCount": {
+            "type": "integer",
+            "description": "Total count of unacknowledged messages in the queue.\n \nSupported plans: default, dedicated.",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the queue.",
+            "pattern": "^(?=^.{7,164}$)([a-zA-Z0-9]+\\/[a-zA-Z0-9\\.\\-]+\\/[a-zA-Z0-9\\.\\-]+(\\/[a-zA-Z0-9\\.\\-_]+)+)$"
+          }
+        }
+      },
+      "QueueP": {
+        "title": "QueueP",
+        "type": "object",
+        "properties": {
+          "accessType": {
+            "type": "string",
+            "description": "A queue has an access type, which determines how messages are delivered when multiple consumer flows are bound to it. Queues can be assigned one of the following access types\nEXCLUSIVE: Only one consumer can receive a message at any one time, while additional consumers may be connected as standby. That is, only one Flow can be active. Only the first consumer to bind can receive messages. If the first consumer disconnects, the second consumer receives data, and so on. An exclusive queue always delivers messages in the order they are received.\nNON_EXCLUSIVE: Multiple consumers can bind to a non-exclusive queue. Each consumer is serviced in round-robin fashion. This provides load-balancing; however, if a connection fails, then unacknowledged messages are delivered to another consumer with the re-delivered flag set. In this way, messages can be delivered to consumers out of order.\nThe access type can be changed for a durable queue, but only when client access to the queue has been disabled.\nThe default value is: NON_EXCLUSIVE.\n\nSupported plans: default, dedicated.",
+            "example": "EXCLUSIVE",
+            "enum": [
+              "EXCLUSIVE",
+              "NON_EXCLUSIVE"
+            ],
+            "default": "NON_EXCLUSIVE"
+          },
+          "maxDeliveredUnackedMsgsPerFlow": {
+            "type": "integer",
+            "description": "Maximum number of unacknowledged messages allowed in the queue. The default value is: 10000.\n\nSupported plans: default, dedicated.",
+            "format": "int64"
+          },
+          "maxMessageSizeInBytes": {
+            "type": "integer",
+            "description": "Maximum message size allowed in the queue (in bytes). The default value is: 10000000.\n\nSupported plans: default, dedicated.",
+            "format": "int64"
+          },
+          "maxQueueMessageCount": {
+            "type": "integer",
+            "description": "Maximum allowed messages in the queue. \nSupported plans: dev, lite.",
+            "format": "int64"
+          },
+          "maxQueueSizeInBytes": {
+            "type": "integer",
+            "description": "Maximum allowed queue size (in bytes).\nThe default value is: 1572864000 in (binary) which equates to  1500 megabytes.\nThe value will always be rounded(ceiling) to a multiple of 1048576.\n1048576 equates to 1 megabyte. \nSupported plans: default, dedicated.",
+            "format": "int64"
+          },
+          "respectTtl": {
+            "type": "boolean",
+            "description": "Enable or disable the respecting of the \"time to live\" (TTL). If enabled, then messages contained in the Queue are checked for expiry. If expired, the message is removed from the Queue and discarded. The default value is `false`\n\nSupported plans: default, dedicated.",
+            "default": false
+          },
+          "maxRedeliveryCount": {
+            "type": "integer",
+            "description": "This property is applicable only when AMQP 1.0 is used. When messages are consumed with AMQP 1.0 protocol, client can reject a message delivered from queue. In such case the message is redelivered to the client. This property determines maximum number of times the queue attempts redelivery of a message. After maximum redelivery count is reached, the message is moved to the queue that is set as dead message queue for this queue. If dead message queue is not specified, the message is discarded after maximum redelivery count is reached. See property deadMsgQueue for how to specify dead message queue.",
+            "format": "int64",
+            "minimum": 0,
+            "maximum": 255,
+            "default": 0
+          },
+          "maxTtl": {
+            "type": "integer",
+            "description": "Maximum time in seconds a message can stay in the queue when respectTtl option enabled for queue. A message expires when the lesser of the sender assigned time-to-live (TTL) in the message and the maxTtl configured for the queue is exceeded. The expired message  is moved the queue that is set as dead message queue for this queue. If dead message queue is not specified, the message is discarded after expiry. See property deadMsgQueue for how to specify dead message queue. A value of 0 for this property disables expiry.",
+            "format": "int64",
+            "default": 0
+          },
+          "deadMsgQueue": {
+            "type": "string",
+            "description": "A queue can be created or updated with dead message queue using this property.  Value of deadMsgQueue is name of another queue. Expired messages or messages that reach maximum redelivery count are moved to dead message queue. See properties maxRedeliveryCount and maxTtl for details."
+          },
+          "egressDisabled": {
+            "type": "boolean",
+            "description": "Enable or disable the transmission of messages from the Queue. The default value is false.",
+            "default": false
+          },
+          "ingressDisabled": {
+            "type": "boolean",
+            "description": "Enable or disable the reception of messages to the Queue. The default value is false.",
+            "default": false
+          }
+        }
+      },
+      "QueueSubscription": {
+        "title": "QueueSubscription",
+        "required": [
+          "queueName",
+          "topicPattern"
+        ],
+        "type": "object",
+        "properties": {
+          "topicPattern": {
+            "type": "string",
+            "description": "Topic pattern"
+          },
+          "queueName": {
+            "type": "string",
+            "description": "Name of the queue"
+          }
+        }
+      },
+      "QueueName": {
+        "title": "QueueName",
+        "type": "string",
+        "pattern": "^(?=^.{7,164}$)([a-zA-Z0-9]+\\/[a-zA-Z0-9\\.\\-]+\\/[a-zA-Z0-9\\.\\-]+(\\/[a-zA-Z0-9\\.\\-_]+)+)$"
+      },
+      "TopicPattern": {
+        "title": "TopicPattern",
+        "type": "string",
+        "pattern": "^(?=^.{7,150}$)([a-zA-Z0-9]+\\/[a-zA-Z0-9\\.\\-]+\\/[a-zA-Z0-9\\.\\-]+(\\/[a-zA-Z0-9\\.\\-_]+)*(\\/\\*){1}$)$"
+      }
+    }
+  }
+}
