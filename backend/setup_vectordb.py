@@ -7,6 +7,7 @@ Run this after starting Qdrant container.
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams
 import sys
+from app import EMBEDDING_DIMENSION
 
 
 def check_connection():
@@ -34,7 +35,7 @@ def create_demo_collection(client):
         client.create_collection(
             collection_name=collection_name,
             vectors_config=VectorParams(
-                size=768,  # Dimension for all-MiniLM-L6-v2 model
+                size=EMBEDDING_DIMENSION, # Use EMBEDDING_DIMENSION from app config
                 distance=Distance.COSINE
             )
         )
@@ -53,7 +54,7 @@ def create_test_user_collections(client):
             client.create_collection(
                 collection_name=collection_name,
                 vectors_config=VectorParams(
-                    size=768,
+                    size=EMBEDDING_DIMENSION, # Use EMBEDDING_DIMENSION from app config
                     distance=Distance.COSINE
                 )
             )

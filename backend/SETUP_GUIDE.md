@@ -169,7 +169,7 @@ try:
     client.create_collection(
         collection_name=collection_name,
         vectors_config=VectorParams(
-            size=768,  # Dimension for all-MiniLM-L6-v2
+            size=1024,  # Dimension for all-MiniLM-L6-v2
             distance=Distance.COSINE
         )
     )
@@ -205,7 +205,7 @@ def create_user_collection(user_id):
         client.create_collection(
             collection_name=collection_name,
             vectors_config=VectorParams(
-                size=768,  # all-MiniLM-L6-v2 embedding size
+                size=1024,  # all-MiniLM-L6-v2 embedding size
                 distance=Distance.COSINE  # Cosine similarity
             )
         )
@@ -257,7 +257,7 @@ def create_demo_collection(client):
         client.create_collection(
             collection_name=collection_name,
             vectors_config=VectorParams(
-                size=768,
+                size=1024,
                 distance=Distance.COSINE
             )
         )

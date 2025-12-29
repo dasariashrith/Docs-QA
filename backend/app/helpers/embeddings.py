@@ -7,15 +7,15 @@ from typing import List, Dict, Optional, Tuple
 from transformers import AutoTokenizer, AutoModel
 import torch
 import numpy as np
-
+from app import EMBEDDING_MODEL, EMBEDDING_DIMENSION
 
 class EmbeddingManager:
     """
     Manages embedding generation using Hugging Face BERT/SBERT model.
-    Uses sentence-transformers/all-mpnet-base-v2 for efficient embeddings.
+    Uses EMBEDDING_MODEL for efficient embeddings.
     """
 
-    def __init__(self, model_name: str = "sentence-transformers/all-mpnet-base-v2"):
+    def __init__(self, model_name: str = EMBEDDING_MODEL):
         self.model_name = model_name
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model = AutoModel.from_pretrained(model_name)
@@ -107,7 +107,7 @@ def process_chunks_with_embeddings(
     vector_db_client,
     collection_name: str,
     similarity_threshold: float = 0.98,
-    model_name: str = "sentence-transformers/all-mpnet-base-v2"
+    model_name: str = EMBEDDING_MODEL
 ) -> Dict:
     """
     Process chunks: generate embeddings, check for duplicates, and insert/update in vector DB.
@@ -273,6 +273,58 @@ def search_similar_embeddings(
     except Exception as e:
         raise ValueError(f"Vector DB search failed: {str(e)}")
 
+def advanced_search_similar_embeddings(
+    user_message: str,
+    vector_db_client,
+    collection_name: str,
+    similarity_threshold: float,
+    limit: int = 10
+) -> List[Dict]:
+    """
+    Search vector DB for embeddings similar to query embedding.
+    
+    Args:
+        vector_db_client: Vector database client
+        collection_name: Collection to search
+        query_embedding: Query vector
+        similarity_threshold: Minimum similarity score (0-1)
+        limit: Maximum number of results
+    
+    Returns:
+        List[Dict]: List of similar vectors with metadata
+        [
+            {
+                "id": "vector_id",
+                "score": 0.95,
+                "payload": {"chunk_text": "...", "file_identifiers": [...]}
+            }
+        ]
+    """
+    # This is a generic interface - implement based on your vector DB
+    # Example for Qdrant:
+    try:
+        from app.models.chat import generate_queries
+        queries = generate_queries(user_message, queries_number=5)
+        print("Generated queries for vector search:", queries)
+        all_results = []
+        for query in queries:
+            query_embedding = manager.generate_embedding(query)
+            results = search_similar_embeddings(
+                vector_db_client=vector_db_client,
+                collection_name=collection_name,
+                query_embedding=query_embedding,
+                similarity_threshold=similarity_threshold,
+                limit=limit
+            )
+            all_results.extend(results)
+        # Remove duplicates based on vector ID
+        unique_results = {}
+        for result in all_results:
+            unique_results[result['id']] = result
+        return list(unique_results.values())
+    except Exception as e:
+        raise ValueError(f"Vector DB search failed: {str(e)}")
+
 
 def update_vector_metadata(
     vector_db_client,
@@ -341,6 +393,57 @@ def insert_new_vector(
         return vector_id
     except Exception as e:
         raise ValueError(f"Failed to insert vector: {str(e)}")
+
+
+def list_filenames(
+    vector_db_client,
+    collection_name: str
+) -> List[str]:
+    """
+    List all unique filenames in a user's collection.
+    
+    Workflow:
+    1. Scroll through all vectors in the collection
+    2. Extract file_identifiers from each vector's payload
+    3. Return unique list of filenames
+    
+    Args:
+        vector_db_client: Vector database client
+        collection_name: Collection name
+    
+    Returns:
+        List[str]: List of unique filenames in the collection
+    """
+    try:
+        # Set to store unique filenames
+        unique_filenames = set()
+        
+        # Scroll through all vectors in the collection
+        offset = None
+        while True:
+            # Scroll in batches
+            vectors, offset = vector_db_client.scroll(
+                collection_name=collection_name,
+                limit=100,  # Batch size
+                offset=offset,
+                with_payload=True,
+                with_vectors=False  # Don't need vectors, just payload
+            )
+            
+            # Extract filenames from each vector's payload
+            for vector in vectors:
+                file_identifiers = vector.payload.get('file_identifiers', [])
+                unique_filenames.update(file_identifiers)
+            
+            # Break if no more vectors
+            if offset is None:
+                break
+        
+        # Return sorted list
+        return sorted(list(unique_filenames))
+        
+    except Exception as e:
+        raise ValueError(f"Failed to list filenames: {str(e)}")
 
 
 def delete_vectors_by_filename(
@@ -427,5 +530,3 @@ def delete_vectors_by_filename(
         }
     except Exception as e:
         raise ValueError(f"Failed to delete vectors: {str(e)}")
-
-

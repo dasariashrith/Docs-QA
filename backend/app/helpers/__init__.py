@@ -35,6 +35,7 @@ from .embeddings import (
     search_similar_embeddings,
     update_vector_metadata,
     insert_new_vector,
+    list_filenames,
     delete_vectors_by_filename
 )
 
@@ -58,5 +59,6 @@ __all__ = [
     'search_similar_embeddings',
     'update_vector_metadata',
     'insert_new_vector',
+    'list_filenames',
     'delete_vectors_by_filename'
 ]

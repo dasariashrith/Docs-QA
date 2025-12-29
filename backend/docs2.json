@@ -1,0 +1,431 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "description": "The Unified Resource Manager APIs are designed with an HTTP-based RESTful architecture, facilitating developers in performing CRUD (Create, Read, Update, Delete) operations on various registered resource types.<br/><br/>The APIs in this package empower you to manage, build, and extend the core capabilities of SAP Business Technology Platform (BTP) Unified Services using the Unified Resource Manager:  \n* Tools: Offers a wide range of tools to enhance the overall experience, productivity, and usability. \n* Extendable API server: Its API is defined and extended by customers. It is done by registering custom resource types.  \n* Declarative approach: With declarative RESTful APIs, consumers define the desired state without worrying about the steps the system performs to get there. \n\nUnified Resource Manager plays a crucial role in the Unified Services framework, serving as the primary interface for managing the lifecycle of the Unified Services resources.<br/><br/>These APIs empower efficient resource management by allowing real-time notifications whenever modifications occur in the resource’s state. Consequently, developers can immediately detect changes and efficiently reconcile discrepancies, ensuring seamless and up-to-date resource management.<br/><br/>The Unified Resource Manager APIs present an invaluable tool for enterprises seeking agility and precision in resource management. By automating CRUD operations and offering real-time notifications for resource state changes, these APIs significantly reduce the complexity and time associated with manual monitoring and adjustment processes. This automation fosters an environment of operational efficiency, enabling developers to focus on strategic tasks that drive innovation and business growth. The APIs serve as a central hub for resource management, thereby facilitating seamless integration across various applications, ultimately contributing to a cohesive and integrated digital ecosystem.<br/><br/><b>IMPORTANT:</b> Unified Resource Manager supports both OIDC and certificate-based authentication. For information about how to obtain an OAuth token with uctl, see [Obtaining an ID Token with uctl](https://pages.github.tools.sap/unified-resource-manager/help-docs/public/tools/uctl/uctl-token-access/).<br/><br/>See also:\n* [HTTP REST APIs](https://pages.github.tools.sap/unified-resource-manager/help-docs/public/api/rest-api/)\n* [Resource API](https://pages.github.tools.sap/unified-resource-manager/help-docs/public/getting-started/discovery/resourceapi/)\n* [Unified Services Reference Guide](https://pages.github.tools.sap/atom-cfs/atom-docs/docs/reference-guide)\n* [Technical Client V2](https://pages.github.tools.sap/unified-resource-manager/help-docs/public/getting-started/system-resources/technical-client/)",
+    "termsOfService": "http://www.sap.com",
+    "title": "Resource",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "https://global.resource.api.sap",
+      "description": "Generated server url"
+    }
+  ],
+  "security": [
+    {
+      "OIDC": []
+    }
+  ],
+  "tags": [
+    {
+      "description": "Resource Operations",
+      "name": "Resource Operations"
+    }
+  ],
+  "paths": {
+    "/api/resources/{group}/{version}/{plural-type}/{path-to-resource}": {
+      "post": {
+        "description": "Resource contains and represents the API information of a specific Resource Type. You can use the Resource API to discover a list of APIs for the different resource types according to the client’s authorizations.",
+        "operationId": "createResource",
+        "parameters": [
+          {
+            "description": "Specify the resource group name.",
+            "in": "path",
+            "name": "group",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Specify the resource group name."
+            }
+          },
+          {
+            "description": "Specify the resource version.",
+            "in": "path",
+            "name": "version",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Specify the resource version."
+            }
+          },
+          {
+            "description": "Specify the resource plural-type form.",
+            "in": "path",
+            "name": "plural-type",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Specify the resource plural-type form."
+            }
+          },
+          {
+            "description": "Specify the path to the resource.",
+            "in": "path",
+            "name": "path-to-resource",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Specify the path to the resource."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {},
+            "description": "OK"
+          },
+          "400": {
+            "content": {},
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Not Authorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {},
+            "description": "Not Found"
+          }
+        },
+        "summary": "Create a resource",
+        "tags": [
+          "Resource Operations"
+        ]
+      },
+      "get": {
+        "description": "Resource contains and represents the API information of a specific Resource Type. You can use the Resource API to discover a list of APIs for the different resource types according to the client’s authorizations.",
+        "operationId": "getResources",
+        "parameters": [
+          {
+            "description": "Specify the resources group name.",
+            "in": "path",
+            "name": "group",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Specify the resources group name."
+            }
+          },
+          {
+            "description": "Specify the resources version.",
+            "in": "path",
+            "name": "version",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Specify the resources version."
+            }
+          },
+          {
+            "description": "Specify the resources plural-type form.",
+            "in": "path",
+            "name": "plural-type",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Specify the resources plural-type form."
+            }
+          },
+          {
+            "description": "Specify the path to the resources.",
+            "in": "path",
+            "name": "path-to-resource",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Specify the path to the resources."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {},
+            "description": "OK"
+          },
+          "400": {
+            "content": {},
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Not Authorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {},
+            "description": "Not Found"
+          }
+        },
+        "summary": "Get a list of resources",
+        "tags": [
+          "Resource Operations"
+        ]
+      }
+    },
+    "/api/resources/{group}/{version}/{plural-type}/{path-to-resource}/.{name}": {
+      "get": {
+        "description": "Resource contains and represents the API information of a specific Resource Type. You can use the Resource API to discover a list of APIs for the different resource types according to the client’s authorizations.",
+        "operationId": "getResource",
+        "parameters": [
+          {
+            "description": "Specify the resource group name.",
+            "in": "path",
+            "name": "group",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Specify the resource group name."
+            }
+          },
+          {
+            "description": "Specify the resource version.",
+            "in": "path",
+            "name": "version",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Specify the resource version."
+            }
+          },
+          {
+            "description": "Specify the resource plural-type form.",
+            "in": "path",
+            "name": "plural-type",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Specify the resource plural-type form."
+            }
+          },
+          {
+            "description": "Specify the path to the resource.",
+            "in": "path",
+            "name": "path-to-resource",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Specify the path to the resource."
+            }
+          },
+          {
+            "description": "Specify the resource name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Specify the resource name."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {},
+            "description": "OK"
+          },
+          "400": {
+            "content": {},
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Not Authorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {},
+            "description": "Not Found"
+          }
+        },
+        "summary": "Get a resource",
+        "tags": [
+          "Resource Operations"
+        ]
+      },
+      "put": {
+        "description": "Resource contains and represents the API information of a specific Resource Type. You can use the Resource API to discover a list of APIs for the different resource types according to the client’s authorizations.",
+        "operationId": "updateResource",
+        "parameters": [
+          {
+            "description": "Specify the resource group name.",
+            "in": "path",
+            "name": "group",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Specify the resource group name."
+            }
+          },
+          {
+            "description": "Specify the resource version.",
+            "in": "path",
+            "name": "version",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Specify the resource version."
+            }
+          },
+          {
+            "description": "Specify the resource plural-type form.",
+            "in": "path",
+            "name": "plural-type",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Specify the resource plural-type form."
+            }
+          },
+          {
+            "description": "Specify the path to the resource.",
+            "in": "path",
+            "name": "path-to-resource",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Specify the path to the resource."
+            }
+          },
+          {
+            "description": "Specify the resource name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Specify the resource name."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {},
+            "description": "OK"
+          },
+          "400": {
+            "content": {},
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Not Authorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {},
+            "description": "Not Found"
+          }
+        },
+        "summary": "Update a resource",
+        "tags": [
+          "Resource Operations"
+        ]
+      },
+      "delete": {
+        "description": "Resource contains and represents the API information of a specific Resource Type. You can use the Resource API to discover a list of APIs for the different resource types according to the client’s authorizations.",
+        "operationId": "deleteResource",
+        "parameters": [
+          {
+            "description": "Specify the resource group name.",
+            "in": "path",
+            "name": "group",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Specify the resource group name."
+            }
+          },
+          {
+            "description": "Specify the resource version.",
+            "in": "path",
+            "name": "version",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Specify the resource version."
+            }
+          },
+          {
+            "description": "Specify the resource plural-type form.",
+            "in": "path",
+            "name": "plural-type",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Specify the resource plural-type form."
+            }
+          },
+          {
+            "description": "Specify the path to the resource.",
+            "in": "path",
+            "name": "path-to-resource",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Specify the path to the resource."
+            }
+          },
+          {
+            "description": "Specify the resource name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Specify the resource name."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {},
+            "description": "OK"
+          },
+          "400": {
+            "content": {},
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Not Authorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {},
+            "description": "Not Found"
+          }
+        },
+        "summary": "Delete a resource",
+        "tags": [
+          "Resource Operations"
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "OIDC": {
+        "type": "openIdConnect",
+        "openIdConnectUrl": "https://accounts.sap.com/.well-known/openid-configuration"
+      }
+    }
+  },
+  "x-sap-shortText": "Explore CRUD-programmatic interfaces for registered resource types.",
+  "x-sap-hub-capabilities": {
+    "sdk-consumption": false
+  },
+  "externalDocs": {
+    "description": "HTTP REST APIs",
+    "url": "https://pages.github.tools.sap/unified-resource-manager/help-docs/public/api/rest-api/"
+  },
+  "x-sap-stateInfo": {
+    "state": "Active"
+  }
+}

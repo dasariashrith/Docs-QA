@@ -1,3 +1,5 @@
 venv/*
 venv
 .env
+postgres_data/
+qdrant_storage

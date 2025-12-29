@@ -4,7 +4,7 @@ Framework-agnostic validation functions.
 """
 
 from typing import List, Dict
-
+from app import EMBEDDING_DIMENSION
 
 # File size limits (in bytes)
 MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024  # 100 MB
@@ -143,7 +143,7 @@ def calculate_storage_size(chunks: List[Dict]) -> int:
 
 def estimate_embedding_size(
     num_chunks: int,
-    embedding_dimension: int = 768,
+    embedding_dimension: int = EMBEDDING_DIMENSION,
     bytes_per_float: int = 4
 ) -> int:
     """
@@ -151,7 +151,7 @@ def estimate_embedding_size(
     
     Args:
         num_chunks: Number of chunks
-        embedding_dimension: Dimension of embedding vectors (default: 768 for MiniLM)
+        embedding_dimension: Dimension of embedding vectors (default: EMBEDDING_DIMENSION)
         bytes_per_float: Bytes per float value (default: 4 for float32)
     
     Returns:

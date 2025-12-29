@@ -10,6 +10,7 @@ from app.helpers import (
     validate_file_size,
     validate_file_type
 )
+from app import EMBEDDING_DIMENSION
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams
 
@@ -37,7 +38,7 @@ def example_1_basic_file_processing():
     print(f"  Hash: {result['chunks'][0]['content_hash'][:16]}...")
 
 
-def example_2_upload_with_embeddings():
+def example_2_upload_with_embeddings(collection_name="user_123_documents",filename="docs2.json"):
     """
     Example 2: Complete upload workflow with embeddings and deduplication.
     This is what your /upload endpoint should do.
@@ -48,7 +49,6 @@ def example_2_upload_with_embeddings():
     
     # Step 1: Initialize vector DB client
     client = QdrantClient("localhost", port=6333)
-    collection_name = "user_123_documents"
     
     # Step 2: Create collection if it doesn't exist
     try:
@@ -59,13 +59,12 @@ def example_2_upload_with_embeddings():
         client.create_collection(
             collection_name=collection_name,
             vectors_config=VectorParams(
-                size=768,  # Dimension for all-MiniLM-L6-v2 model
+                size=EMBEDDING_DIMENSION,  # Dimension from app config
                 distance=Distance.COSINE
             )
         )
     
     # Step 3: Validate file
-    filename = "docs.pdf"
     file_size = 50 * 1024 * 1024  # 50 MB
     
     is_valid_type, type_msg = validate_file_type(filename)
@@ -318,8 +317,7 @@ def search_vectors_example():
     collection_name = "user_123_documents"
     
     # Example query text
-    query_text = """what is the Order No of MC32B7382QC/TL?"""
-    
+    query_text = """how to list resources in Unified Workspace?"""
     # Generate embedding for query text
     from app.helpers.embeddings import EmbeddingManager, search_similar_embeddings
     embedding_manager = EmbeddingManager()
@@ -339,4 +337,4 @@ def search_vectors_example():
         print(f"result {idx + 1}: {res['payload'].get('chunk_text', '')}... (score: {res['score']:.4f})")
 
 # example_2_upload_with_embeddings()
-search_vectors_example()
+# search_vectors_example()
