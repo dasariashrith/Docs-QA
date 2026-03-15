@@ -1,15 +1,36 @@
 """
 Embedding generation and vector database operations.
-Uses Hugging Face's BERT model for embeddings (no API key required).
+Supports both local models (Hugging Face) and SAP AI Core API.
 """
 
 from typing import List, Dict, Optional, Tuple
+from abc import ABC, abstractmethod
 from transformers import AutoTokenizer, AutoModel
 import torch
 import numpy as np
-from app import EMBEDDING_MODEL, EMBEDDING_DIMENSION
+from app import (
+    EMBEDDING_MODEL, 
+    EMBEDDING_DIMENSION,
+    MODEL_PROVIDER,
+    EMBEDDING_MODEL_NAME
+)
 
-class EmbeddingManager:
+
+class BaseEmbeddingManager(ABC):
+    """Abstract base class for embedding managers."""
+    
+    @abstractmethod
+    def generate_embedding(self, text: str) -> List[float]:
+        """Generate embedding for a single text chunk."""
+        pass
+    
+    @abstractmethod
+    def generate_embeddings_batch(self, texts: List[str]) -> List[List[float]]:
+        """Generate embeddings for multiple text chunks efficiently."""
+        pass
+
+
+class LocalEmbeddingManager(BaseEmbeddingManager):
     """
     Manages embedding generation using Hugging Face BERT/SBERT model.
     Uses EMBEDDING_MODEL for efficient embeddings.
@@ -26,6 +47,7 @@ class EmbeddingManager:
         # Device
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model.to(self.device)
+        print(f"Local embedding model loaded: {self.model_name}")
 
     # --- FIXED: Use sentence-transformers official mean pooling ---
     def _mean_pooling(self, model_output, attention_mask):
@@ -76,7 +98,48 @@ class EmbeddingManager:
         # Convert to list
         return embeddings.cpu().tolist()
 
-manager = EmbeddingManager()
+
+class SAPAIEmbeddingManager(BaseEmbeddingManager):
+    """
+    Manages embedding generation using SAP AI Core API.
+    """
+
+    def __init__(self, model_name: str = EMBEDDING_MODEL_NAME):
+        from app.helpers.sap_ai_core_client import get_sap_ai_core_client
+        
+        self.client = get_sap_ai_core_client()
+        self.model_name = model_name
+        print(f"SAP AI Core embedding model initialized: {self.model_name}")
+
+    def generate_embedding(self, text: str) -> List[float]:
+        """
+        Generate embedding for a single text chunk.
+        """
+        return self.generate_embeddings_batch([text])[0]
+
+    def generate_embeddings_batch(self, texts: List[str]) -> List[List[float]]:
+        """
+        Generate embeddings for multiple text chunks efficiently.
+        """
+        return self.client.create_embeddings(
+            model=self.model_name,
+            texts=texts
+        )
+
+
+def create_embedding_manager() -> BaseEmbeddingManager:
+    """Factory function to create embedding manager based on configuration."""
+    # if MODEL_PROVIDER == 'sap_ai_core':
+    #     return SAPAIEmbeddingManager(model_name=EMBEDDING_MODEL_NAME)
+    # else:
+    #     return LocalEmbeddingManager(model_name=EMBEDDING_MODEL)
+    
+    return LocalEmbeddingManager(model_name=EMBEDDING_MODEL)
+
+
+# Global embedding manager instance
+manager = create_embedding_manager()
+
 
 def calculate_cosine_similarity(embedding1: List[float], embedding2: List[float]) -> float:
     """
@@ -113,7 +176,7 @@ def process_chunks_with_embeddings(
     Process chunks: generate embeddings, check for duplicates, and insert/update in vector DB.
     
     Workflow:
-    1. Generate embeddings for all chunks using Hugging Face BERT
+    1. Generate embeddings for all chunks using configured provider
     2. For each chunk:
        - Search vector DB for similar embeddings (similarity >= threshold)
        - If similar embedding found: Update metadata (add filename to file_identifiers)
@@ -124,7 +187,7 @@ def process_chunks_with_embeddings(
         vector_db_client: Vector database client (Qdrant, Milvus, etc.)
         collection_name: Name of the collection to store vectors
         similarity_threshold: Similarity threshold for deduplication (default: 0.9)
-        model_name: Hugging Face model name
+        model_name: Model name (not used, kept for backward compatibility)
     
     Returns:
         dict: Processing summary
@@ -273,6 +336,7 @@ def search_similar_embeddings(
     except Exception as e:
         raise ValueError(f"Vector DB search failed: {str(e)}")
 
+
 def advanced_search_similar_embeddings(
     user_message: str,
     vector_db_client,
@@ -281,12 +345,12 @@ def advanced_search_similar_embeddings(
     limit: int = 10
 ) -> List[Dict]:
     """
-    Search vector DB for embeddings similar to query embedding.
+    Search vector DB for embeddings similar to query embedding using multiple queries.
     
     Args:
+        user_message: User's query message
         vector_db_client: Vector database client
         collection_name: Collection to search
-        query_embedding: Query vector
         similarity_threshold: Minimum similarity score (0-1)
         limit: Maximum number of results
     

@@ -336,5 +336,5 @@ def search_vectors_example():
     for idx, res in enumerate(results):
         print(f"result {idx + 1}: {res['payload'].get('chunk_text', '')}... (score: {res['score']:.4f})")
 
-# example_2_upload_with_embeddings()
+example_2_upload_with_embeddings()
 # search_vectors_example()

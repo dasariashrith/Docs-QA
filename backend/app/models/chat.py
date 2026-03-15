@@ -1,11 +1,34 @@
 from typing import List
+from abc import ABC, abstractmethod
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from qdrant_client import QdrantClient
-from app.__init__ import CHAT_MODEL, CHAT_MODEL_CONTEXT_LENGTH
+from app.__init__ import (
+    CHAT_MODEL, 
+    CHAT_MODEL_CONTEXT_LENGTH,
+    MODEL_PROVIDER,
+    CHAT_MODEL_NAME
+)
 from app.models.chat_history import get_chat_messages
 import torch
 
-class ChatModel:
+
+class BaseChatModel(ABC):
+    """Abstract base class for chat models."""
+    
+    @abstractmethod
+    def get_response(self, prompt: str, max_new_tokens: int = 512) -> str:
+        """Generate response from the model."""
+        pass
+    
+    @abstractmethod
+    def get_chat_response(self, messages: List[dict], max_new_tokens: int = 512) -> str:
+        """Generate response from chat messages format."""
+        pass
+
+
+class LocalChatModel(BaseChatModel):
+    """Local chat model using Hugging Face transformers."""
+    
     def __init__(self, model_name: str = CHAT_MODEL):
         """
         Initialize chat model. Falls back to a smaller model if the configured model fails.
@@ -58,31 +81,63 @@ class ChatModel:
         # Decode only the generated tokens (excluding the input prompt)
         generated_text = self.tokenizer.decode(outputs[0][inputs['input_ids'].shape[1]:], skip_special_tokens=True)
         return generated_text.strip()
+    
+    def get_chat_response(self, messages: List[dict], max_new_tokens: int = 512) -> str:
+        """Generate response from chat messages format."""
+        # Convert messages to a single prompt
+        prompt = "\n".join([f"{msg['role'].upper()}: {msg['content']}" for msg in messages])
+        return self.get_response(prompt, max_new_tokens)
 
-chat_model = ChatModel()
+
+class SAPAIChatModel(BaseChatModel):
+    """SAP AI Core chat model using API calls."""
+    
+    def __init__(self, model_name: str = CHAT_MODEL_NAME):
+        """Initialize SAP AI Core chat model."""
+        from app.helpers.sap_ai_core_client import get_sap_ai_core_client
+        
+        self.client = get_sap_ai_core_client()
+        self.model_name = model_name
+        print(f"SAP AI Core chat model initialized: {self.model_name}")
+    
+    def get_response(self, prompt: str, max_new_tokens: int = 512) -> str:
+        """Generate response using SAP AI Core API."""
+        # Convert simple prompt to chat format
+        messages = [{"role": "user", "content": prompt}]
+        return self.get_chat_response(messages, max_new_tokens)
+    
+    def get_chat_response(self, messages: List[dict], max_new_tokens: int = 512) -> str:
+        """Generate response from chat messages format."""
+        return self.client.chat_completion(
+            model=self.model_name,
+            messages=messages,
+            max_tokens=max_new_tokens,
+            temperature=0.7
+        )
+
+
+def create_chat_model() -> BaseChatModel:
+    """Factory function to create chat model based on configuration."""
+    if MODEL_PROVIDER == 'sap_ai_core':
+        return SAPAIChatModel(model_name=CHAT_MODEL_NAME)
+    else:
+        return LocalChatModel(model_name=CHAT_MODEL)
+
+
+# Global chat model instance
+chat_model = create_chat_model()
+
+
 def generate_response(user_message: str, user_id: str, chat_id: str) -> str:
     """
     Generate AI response using RAG context and chat history.
     """
     # Initialize
-    
     client = QdrantClient("localhost", port=6333)
     collection_name = f"user_{user_id}_documents"
     
     # 1. Get RAG Context
-    from app.helpers.embeddings import EmbeddingManager, search_similar_embeddings, advanced_search_similar_embeddings
-    # embedding_manager = EmbeddingManager()
-    # query_embedding = embedding_manager.generate_embedding(user_message)
-    
-    # rag_results = search_similar_embeddings(
-    #     vector_db_client=client,
-    #     collection_name=collection_name,
-    #     query_embedding=query_embedding,
-    #     similarity_threshold=0.25,
-    #     limit=5
-    # )
-
-    
+    from app.helpers.embeddings import advanced_search_similar_embeddings
     
     rag_results = advanced_search_similar_embeddings(
         user_message=user_message,
@@ -92,6 +147,7 @@ def generate_response(user_message: str, user_id: str, chat_id: str) -> str:
         limit=5
     )
     print(f"RAG results found: {rag_results}")
+    
     # 2. Get Chat History (start with reasonable limit)
     max_history_messages = 10
     chat_history = get_chat_messages(chat_id, limit=max_history_messages)
@@ -179,15 +235,12 @@ NOT as a source of factual information.
 - If no relevant information exists, say so explicitly
 
 ## Answer"""
+    
     print(f"Final prompt : {prompt}, length: {len(prompt)}")
+    
     # 6. Generate Response
     response = chat_model.get_response(prompt, max_new_tokens=1028)
     print("generated response:", response)
-    
-    # 7. Store in Chat History
-    from app.models.chat_history import add_message
-    # add_message(chat_id, "user", user_message)
-    # add_message(chat_id, "assistant", response)
     
     return response
 
@@ -212,12 +265,14 @@ RULES:
 - No numbering or bullet points
 - No explanations
 - Do NOT repeat similar queries"""
+    
     prompt = f"""{system_prompt}
 
 User question:
 {user_message}
 
 Search queries:"""
+    
     response = chat_model.get_response(prompt, max_new_tokens=128)
     print("Generated queries:", response)
     return response.splitlines()

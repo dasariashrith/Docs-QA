@@ -29,7 +29,7 @@ from .validation import (
 )
 
 from .embeddings import (
-    EmbeddingManager,
+    create_embedding_manager,
     calculate_cosine_similarity,
     process_chunks_with_embeddings,
     search_similar_embeddings,
